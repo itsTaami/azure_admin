@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // @mui
 import {
   Card,
@@ -30,16 +30,15 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 import USERLIST from '../_mock/user';
+import axios from 'axios';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'company', label: 'Company', alignRight: false },
-  { id: 'role', label: 'Role', alignRight: false },
-  { id: 'isVerified', label: 'Verified', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false },
-  { id: '' },
+  { id: 'title', label: 'Name', alignRight: false },
+  { id: 'description', label: 'Description', alignRight: false },
+  { id: 'categoryImg', label: 'Image', alignRight: false },
+  { id: 'categoryRating', label: 'Rate', alignRight: false },
 ];
 
 // ----------------------------------------------------------------------
@@ -75,6 +74,8 @@ function applySortFilter(array, comparator, query) {
 
 export default function UserPage() {
   const [open, setOpen] = useState(null);
+
+  const [category, setCategory] = useState([]);
 
   const [page, setPage] = useState(0);
 
@@ -146,19 +147,23 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
+  useEffect(() => {
+    axios.get('').then().catch();
+  }, []);
+
   return (
     <>
       <Helmet>
-        <title> User | Minimal UI </title>
+        <title> Azure Category </title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            User
+            Category
           </Typography>
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New User
+            New Category
           </Button>
         </Stack>
 
