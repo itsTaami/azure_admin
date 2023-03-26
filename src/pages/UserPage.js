@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
@@ -23,6 +24,8 @@ import {
   TablePagination,
 } from '@mui/material';
 // components
+import AddCategory from 'src/components/addCategory/AddCategory';
+import Edit from '../components/editCategory/Edit';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
@@ -30,7 +33,8 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 import USERLIST from '../_mock/user';
-import axios from 'axios';
+
+
 
 // ----------------------------------------------------------------------
 
@@ -75,6 +79,10 @@ function applySortFilter(array, comparator, query) {
 export default function UserPage() {
   const [open, setOpen] = useState(null);
 
+  const [showModal1, setShowModal1] = useState(false);
+
+  const [showModal2, setShowModal2] = useState(false);
+
   const [category, setCategory] = useState([]);
 
   const [page, setPage] = useState(0);
@@ -89,13 +97,13 @@ export default function UserPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
-  };
+  const openModal1 = () => setShowModal1(true);
 
-  const handleCloseMenu = () => {
-    setOpen(null);
-  };
+  const closeModal1 = () => setShowModal1(false);
+
+  const openModal2 = () => setShowModal2(true);
+
+  const closeModal2 = () => setShowModal2(false);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -141,15 +149,43 @@ export default function UserPage() {
     setFilterName(event.target.value);
   };
 
+  const handleEdit = () => {
+    openModal1();
+    console.log('EDIT');
+  };
+
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
   const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
-  useEffect(() => {
-    axios.get('').then().catch();
-  }, []);
+  const handleDelete = (id) => {
+    axios
+      .delete(`http://localhost:8000/category/${id}`)
+      .then((res) => {
+        console.log(res.data);
+        render();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const render = () => {
+    axios
+      .get('http://localhost:8000/category')
+      .then((res) => {
+        console.log('CAT IRLEE', res.data.categories);
+        setCategory(res.data.categories);
+        setFilteredCategory(res.data.categories);
+      })
+      .catch((err) => {
+        console.log('Err', err);
+      });
+  };
+
+  useEffect(render, []);
 
   return (
     <>
@@ -166,11 +202,12 @@ export default function UserPage() {
             New Category
           </Button>
         </Stack>
+        {!category.length && <h4>Хоосон байна</h4>}
+        {category.length > 0 && (
+          <Card>
+            <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
-        <Card>
-          <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
-
-          <Scrollbar>
+           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
                 <UserListHead
@@ -183,41 +220,69 @@ export default function UserPage() {
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
-                    const selectedUser = selected.indexOf(name) !== -1;
+                {fileteredCategory?.map((row) => {
+                      const { _id, title, description, categoryImg, categoryRating } = row;
 
                     return (
-                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell padding="checkbox">
-                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
-                        </TableCell>
+                      <>
+                      <TableRow hover key={_id} tabIndex={-1} role="checkbox">
+                            <TableCell padding="checkbox">
+                              <Checkbox checked={false} onChange={(event) => handleClick(event, title)} />
+                            </TableCell>
 
-                        <TableCell component="th" scope="row" padding="none">
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
-                            <Typography variant="subtitle2" noWrap>
-                              {name}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
+                            <TableCell component="th" scope="row" padding="none">
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Avatar alt={title} src={categoryImg} />
+                                <Typography variant="subtitle2" noWrap>
+                                  {title}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
+                            <TableCell align="left">{description}</TableCell>
 
-                        <TableCell align="left">{role}</TableCell>
+                            <TableCell align="left">url</TableCell>
 
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
+                            <TableCell align="left">
+                              {/* <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label> */}
 
-                        <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
-                        </TableCell>
+                              <Rating name="half-rating-read" defaultValue={categoryRating} precision={0.5} readOnly>
+                                {categoryRating}
+                              </Rating>
+                            </TableCell>
 
-                        <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                            <Iconify icon={'eva:more-vertical-fill'} />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
+                            <TableCell align="right" sx={{ display: 'flex' }}>
+                              {/* <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                              <Iconify icon={'eva:more-vertical-fill'} />
+                            </IconButton> */}
+                              <Button
+                                sx={{ color: 'error.main' }}
+                                onClick={() => {
+                                  handleDelete(_id);
+                                }}
+                              >
+                                <Iconify icon={'eva:trash-2-fill'} sx={{ mr: 2 }} />
+                                Delete
+                              </Button>
+                              <Button onClick={handleEdit}>
+                                <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
+                                Edit
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                          <Edit
+                            open={showModal1}
+                            handleClose={closeModal1}
+                            title={title}
+                            description={description}
+                            categoryImg={categoryImg}
+                            categoryRating={categoryRating}
+                            id={_id}
+                            render={render}
+                          />
+                      </>
+                      
+
                     );
                   })}
                   {emptyRows > 0 && (
@@ -264,9 +329,15 @@ export default function UserPage() {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Card>
-      </Container>
+        )}
 
-      <Popover
+
+
+       
+      </Container>
+      <AddCategory open={showModal2} handleClose={closeModal2}/>
+
+      {/* <Popover
         open={Boolean(open)}
         anchorEl={open}
         onClose={handleCloseMenu}
@@ -293,7 +364,7 @@ export default function UserPage() {
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>
-      </Popover>
+      </Popover> */}
     </>
   );
 }
