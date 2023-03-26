@@ -26,7 +26,7 @@ import {
 // components
 import AddCategory from 'src/components/addCategory/AddCategory';
 import Edit from '../components/editCategory/Edit';
-import Label from '../components/label';
+// import Label from '../components/label';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
 // sections
