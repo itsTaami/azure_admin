@@ -24,7 +24,7 @@ import {
   TablePagination,
 } from '@mui/material';
 // components
-import AddCategory from 'src/components/addCategory/AddCategory';
+import AddCategory from '../components/addCategory/AddCategory';
 import Edit from '../components/editCategory/Edit';
 // import Label from '../components/label';
 import Iconify from '../components/iconify';
@@ -33,8 +33,6 @@ import Scrollbar from '../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 import USERLIST from '../_mock/user';
-
-
 
 // ----------------------------------------------------------------------
 
@@ -96,6 +94,8 @@ export default function UserPage() {
   const [filterName, setFilterName] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [fileteredCategory, setFilteredCategory] = useState();
 
   const openModal1 = () => setShowModal1(true);
 
@@ -207,25 +207,25 @@ export default function UserPage() {
           <Card>
             <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
-           <Scrollbar>
-            <TableContainer sx={{ minWidth: 800 }}>
-              <Table>
-                <UserListHead
-                  order={order}
-                  orderBy={orderBy}
-                  headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
-                  numSelected={selected.length}
-                  onRequestSort={handleRequestSort}
-                  onSelectAllClick={handleSelectAllClick}
-                />
-                <TableBody>
-                {fileteredCategory?.map((row) => {
+            <Scrollbar>
+              <TableContainer sx={{ minWidth: 800 }}>
+                <Table>
+                  <UserListHead
+                    order={order}
+                    orderBy={orderBy}
+                    headLabel={TABLE_HEAD}
+                    rowCount={USERLIST.length}
+                    numSelected={selected.length}
+                    onRequestSort={handleRequestSort}
+                    onSelectAllClick={handleSelectAllClick}
+                  />
+                  <TableBody>
+                    {fileteredCategory?.map((row) => {
                       const { _id, title, description, categoryImg, categoryRating } = row;
 
-                    return (
-                      <>
-                      <TableRow hover key={_id} tabIndex={-1} role="checkbox">
+                      return (
+                        <>
+                          <TableRow hover key={_id} tabIndex={-1} role="checkbox">
                             <TableCell padding="checkbox">
                               <Checkbox checked={false} onChange={(event) => handleClick(event, title)} />
                             </TableCell>
@@ -246,9 +246,9 @@ export default function UserPage() {
                             <TableCell align="left">
                               {/* <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label> */}
 
-                              <Rating name="half-rating-read" defaultValue={categoryRating} precision={0.5} readOnly>
+                              {/* <Rating name="half-rating-read" defaultValue={categoryRating} precision={0.5} readOnly>
                                 {categoryRating}
-                              </Rating>
+                              </Rating> */}
                             </TableCell>
 
                             <TableCell align="right" sx={{ display: 'flex' }}>
@@ -280,62 +280,56 @@ export default function UserPage() {
                             id={_id}
                             render={render}
                           />
-                      </>
-                      
-
-                    );
-                  })}
-                  {emptyRows > 0 && (
-                    <TableRow style={{ height: 53 * emptyRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
-                  )}
-                </TableBody>
-
-                {isNotFound && (
-                  <TableBody>
-                    <TableRow>
-                      <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                        <Paper
-                          sx={{
-                            textAlign: 'center',
-                          }}
-                        >
-                          <Typography variant="h6" paragraph>
-                            Not found
-                          </Typography>
-
-                          <Typography variant="body2">
-                            No results found for &nbsp;
-                            <strong>&quot;{filterName}&quot;</strong>.
-                            <br /> Try checking for typos or using complete words.
-                          </Typography>
-                        </Paper>
-                      </TableCell>
-                    </TableRow>
+                        </>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow style={{ height: 53 * emptyRows }}>
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
                   </TableBody>
-                )}
-              </Table>
-            </TableContainer>
-          </Scrollbar>
 
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={USERLIST.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Card>
+                  {isNotFound && (
+                    <TableBody>
+                      <TableRow>
+                        <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                          <Paper
+                            sx={{
+                              textAlign: 'center',
+                            }}
+                          >
+                            <Typography variant="h6" paragraph>
+                              Not found
+                            </Typography>
+
+                            <Typography variant="body2">
+                              No results found for &nbsp;
+                              <strong>&quot;{filterName}&quot;</strong>.
+                              <br /> Try checking for typos or using complete words.
+                            </Typography>
+                          </Paper>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  )}
+                </Table>
+              </TableContainer>
+            </Scrollbar>
+
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={USERLIST.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Card>
         )}
-
-
-
-       
       </Container>
-      <AddCategory open={showModal2} handleClose={closeModal2}/>
+      <AddCategory open={showModal2} handleClose={closeModal2} />
 
       {/* <Popover
         open={Boolean(open)}

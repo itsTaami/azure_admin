@@ -15,15 +15,15 @@ export default function LoginForm() {
   const { setUser } = useContext(AuthContext);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('Baraa@gmail.com');
-  const [password, setPassword] = useState('123');
+  const [email, setEmail] = useState();
+  const [password, setPassword] = useState();
 
   const handleClick = async () => {
     // navigate('/dashboard', { replace: true });
     try {
       const result = await axios.post(`http://localhost:8000/users/login`, { email, password });
-      console.log(result);
-      setUser(result.data.user[0]);
+      console.log(result.data);
+      setUser(result.data.user);
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.log(error);
@@ -33,12 +33,13 @@ export default function LoginForm() {
   return (
     <>
       <Stack spacing={3}>
-        <TextField name="email" label="Email address" value={email} />
+        <TextField name="email" label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
 
         <TextField
           name="password"
           label="Password"
           value={password}
+          onChange={(e) => setPassword(e.target.value)}
           type={showPassword ? 'text' : 'password'}
           InputProps={{
             endAdornment: (
