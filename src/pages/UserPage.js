@@ -1,8 +1,10 @@
-import axios from 'axios';
+import { useContext, useEffect, useState } from 'react';
+
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
-import { useEffect, useState } from 'react';
+import axios from 'axios';
+
 // @mui
 import {
   Card,
@@ -23,24 +25,28 @@ import {
   TableContainer,
   TablePagination,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { red } from '@mui/material/colors';
 // components
-import AddCategory from '../components/addCategory/AddCategory';
-import Edit from '../components/editCategory/Edit';
-// import Label from '../components/label';
+import Label from '../components/label';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
+import CategoryModal from '../components/modal/categoryModal';
 // sections
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 import USERLIST from '../_mock/user';
+import { CategoryContext } from '../context/Category';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'title', label: 'Name', alignRight: false },
-  { id: 'description', label: 'Description', alignRight: false },
-  { id: 'categoryImg', label: 'Image', alignRight: false },
-  { id: 'categoryRating', label: 'Rate', alignRight: false },
+  { id: 'title', label: 'Нэр', alignRight: false },
+  { id: 'description', label: 'Тайлбар', alignRight: false },
+  { id: 'categoryImg', label: 'Зураг', alignRight: false },
+  { id: 'catgegoryRating', label: 'Үнэлгээ', alignRight: false },
+  { id: '', label: 'Actions', alignRight: true },
 ];
 
 // ----------------------------------------------------------------------
@@ -75,13 +81,13 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function UserPage() {
+  // Context
+  const { categories, fileteredCategory, getCategory } = useContext(CategoryContext);
+  // console.log(categories, fil)
+
   const [open, setOpen] = useState(null);
 
-  const [showModal1, setShowModal1] = useState(false);
-
-  const [showModal2, setShowModal2] = useState(false);
-
-  const [category, setCategory] = useState([]);
+  const [newCategory, setNewCategory] = useState(false);
 
   const [page, setPage] = useState(0);
 
@@ -95,15 +101,28 @@ export default function UserPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [fileteredCategory, setFilteredCategory] = useState();
+  const [catData, setCatData] = useState({});
 
-  const openModal1 = () => setShowModal1(true);
+  const [isModal, setIsModal] = useState(false);
 
-  const closeModal1 = () => setShowModal1(false);
+  const [isSubmit, setIsSubmit] = useState(false);
 
-  const openModal2 = () => setShowModal2(true);
+  const icons = [
+    { icon: <DeleteIcon sx={{ color: red[500] }} />, name: 'Delete' },
+    { icon: <EditIcon color="action" />, name: 'Edit' },
+  ];
 
-  const closeModal2 = () => setShowModal2(false);
+  const modalToggle = () => {
+    setIsModal(!isModal);
+  };
+
+  const handleOpenMenu = (event) => {
+    setOpen(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setOpen(null);
+  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -149,43 +168,13 @@ export default function UserPage() {
     setFilterName(event.target.value);
   };
 
-  const handleEdit = () => {
-    openModal1();
-    console.log('EDIT');
-  };
-
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
   const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
-  const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:8000/category/${id}`)
-      .then((res) => {
-        console.log(res.data);
-        render();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const render = () => {
-    axios
-      .get('http://localhost:8000/category')
-      .then((res) => {
-        console.log('CAT IRLEE', res.data.categories);
-        setCategory(res.data.categories);
-        setFilteredCategory(res.data.categories);
-      })
-      .catch((err) => {
-        console.log('Err', err);
-      });
-  };
-
-  useEffect(render, []);
+  useEffect(() => getCategory(), [isSubmit]);
 
   return (
     <>
@@ -198,12 +187,20 @@ export default function UserPage() {
           <Typography variant="h4" gutterBottom>
             Category
           </Typography>
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
+          <Button
+            onClick={() => {
+              modalToggle();
+              setCatData({ name: 'New Category' });
+              setNewCategory(true);
+            }}
+            variant="contained"
+            startIcon={<Iconify icon="eva:plus-fill" />}
+          >
             New Category
           </Button>
         </Stack>
-        {!category.length && <h4>Хоосон байна</h4>}
-        {category.length > 0 && (
+        {!categories.length && <h4>Хоосон байна</h4>}
+        {categories.length > 0 && (
           <Card>
             <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
@@ -224,63 +221,50 @@ export default function UserPage() {
                       const { _id, title, description, categoryImg, categoryRating } = row;
 
                       return (
-                        <>
-                          <TableRow hover key={_id} tabIndex={-1} role="checkbox">
-                            <TableCell padding="checkbox">
-                              <Checkbox checked={false} onChange={(event) => handleClick(event, title)} />
-                            </TableCell>
+                        <TableRow hover key={_id} tabIndex={-1} role="checkbox">
+                          <TableCell padding="checkbox">
+                            <Checkbox checked={false} onChange={(event) => handleClick(event, title)} />
+                          </TableCell>
 
-                            <TableCell component="th" scope="row" padding="none">
-                              <Stack direction="row" alignItems="center" spacing={2}>
-                                <Avatar alt={title} src={categoryImg} />
-                                <Typography variant="subtitle2" noWrap>
-                                  {title}
-                                </Typography>
-                              </Stack>
-                            </TableCell>
+                          <TableCell component="th" scope="row" padding="none">
+                            <Stack direction="row" alignItems="center" spacing={2}>
+                              <Avatar alt={title} src={categoryImg} />
+                              <Typography variant="subtitle2" noWrap>
+                                {title}
+                              </Typography>
+                            </Stack>
+                          </TableCell>
 
-                            <TableCell align="left">{description}</TableCell>
+                          <TableCell align="left">{description}</TableCell>
 
-                            <TableCell align="left">url</TableCell>
+                          <TableCell align="left">url</TableCell>
 
-                            <TableCell align="left">
-                              {/* <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label> */}
-
-                              {/* <Rating name="half-rating-read" defaultValue={categoryRating} precision={0.5} readOnly>
+                          <TableCell align="left">
+                            {/* <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label> */}
+                            {/* <Rating name="half-rating-read" defaultValue={categoryRating} precision={0.5} readOnly>
                                 {categoryRating}
                               </Rating> */}
-                            </TableCell>
+                            {categoryRating}
+                          </TableCell>
 
-                            <TableCell align="right" sx={{ display: 'flex' }}>
-                              {/* <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <TableCell align="right" sx={{ display: 'flex' }}>
+                            {/* <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
                               <Iconify icon={'eva:more-vertical-fill'} />
                             </IconButton> */}
+                            {icons.map((e, index) => (
                               <Button
-                                sx={{ color: 'error.main' }}
+                                key={index}
                                 onClick={() => {
-                                  handleDelete(_id);
+                                  modalToggle();
+                                  setCatData({ ...row, name: e.name });
+                                  setNewCategory(false);
                                 }}
                               >
-                                <Iconify icon={'eva:trash-2-fill'} sx={{ mr: 2 }} />
-                                Delete
+                                {e.icon}
                               </Button>
-                              <Button onClick={handleEdit}>
-                                <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
-                                Edit
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          <Edit
-                            open={showModal1}
-                            handleClose={closeModal1}
-                            title={title}
-                            description={description}
-                            categoryImg={categoryImg}
-                            categoryRating={categoryRating}
-                            id={_id}
-                            render={render}
-                          />
-                        </>
+                            ))}
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                     {emptyRows > 0 && (
@@ -329,36 +313,16 @@ export default function UserPage() {
           </Card>
         )}
       </Container>
-      <AddCategory open={showModal2} handleClose={closeModal2} />
-
-      {/* <Popover
-        open={Boolean(open)}
-        anchorEl={open}
-        onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: {
-            p: 1,
-            width: 140,
-            '& .MuiMenuItem-root': {
-              px: 1,
-              typography: 'body2',
-              borderRadius: 0.75,
-            },
-          },
-        }}
-      >
-        <MenuItem>
-          <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
-          Edit
-        </MenuItem>
-
-        <MenuItem sx={{ color: 'error.main' }}>
-          <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
-      </Popover> */}
+      {isModal && (
+        <CategoryModal
+          catData={catData}
+          isSubmit={isSubmit}
+          setIsSubmit={setIsSubmit}
+          isModal={isModal}
+          modalToggle={modalToggle}
+          newCategory={newCategory}
+        />
+      )}
     </>
   );
 }
