@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createContext, React, useEffect, useState } from 'react';
+import { createContext, React, useState } from 'react';
 
 export const CategoryContext = createContext();
 
@@ -7,6 +7,10 @@ const CategoryProvider = ({ children }) => {
   const [categories, setCategory] = useState([]);
 
   const [fileteredCategory, setFilteredCategory] = useState([]);
+
+  const [catData, setCatData] = useState({});
+
+  const { _id } = catData;
 
   const getCategory = () => {
     axios
@@ -22,7 +26,17 @@ const CategoryProvider = ({ children }) => {
   };
 
   return (
-    <CategoryContext.Provider value={{ categories, setCategory, fileteredCategory, setFilteredCategory, getCategory }}>
+    <CategoryContext.Provider
+      value={{
+        categories,
+        setCategory,
+        fileteredCategory,
+        setFilteredCategory,
+        getCategory,
+        catData,
+        setCatData,
+      }}
+    >
       {children}
     </CategoryContext.Provider>
   );

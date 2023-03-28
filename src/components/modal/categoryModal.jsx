@@ -1,9 +1,10 @@
-import * as React from 'react';
+import { React, useState, useContext } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import { TextField, Typography } from '@mui/material';
 import axios from 'axios';
+import { CategoryContext } from '../../context/Category';
 
 const style = {
   display: 'flex',
@@ -23,8 +24,8 @@ const style = {
 
 export default function CategoryModal({
   isModal,
-  catData,
-  setCatData,
+  // catData,
+  // setCatData,
   modalToggle,
   isSubmit,
   setIsSubmit,
@@ -37,15 +38,20 @@ export default function CategoryModal({
     categoryRating: '',
   });
 
+  const { categories, fileteredCategory, getCategory, catData, setCatData } = useContext(CategoryContext);
+
   const changeHandler = (e) => {
     if (newCategory) {
       setNewCategoryObj({ ...newCategoryObj, [e.target.name]: e.target.value });
     } else {
       setCatData({ ...catData, [e.target.name]: e.target.value });
-    }
+    } // catData,
+    // setCatData,
   };
 
   const toggleSubmit = () => {
+    // catData,
+    // setCatData,
     console.log(isSubmit);
     setIsSubmit(!isSubmit);
   };

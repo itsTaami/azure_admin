@@ -33,11 +33,13 @@ import Label from '../components/label';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
 import CategoryModal from '../components/modal/categoryModal';
+import deleteCat from 'src/CategoryActions/deleteCat';
 // sections
 import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
 import USERLIST from '../_mock/user';
 import { CategoryContext } from '../context/Category';
+import DeleteConfirm from '../components/modal/deleteconfirm';
 
 // ----------------------------------------------------------------------
 
@@ -81,11 +83,11 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function UserPage() {
-  // Context
-  const { categories, fileteredCategory, getCategory } = useContext(CategoryContext);
   // console.log(categories, fil)
 
-  const [open, setOpen] = useState(null);
+  // const [open, setOpen] = useState(null);
+
+  const [yes, setYes] = useState(false);
 
   const [newCategory, setNewCategory] = useState(false);
 
@@ -107,21 +109,23 @@ export default function UserPage() {
 
   const [isSubmit, setIsSubmit] = useState(false);
 
-  const icons = [
-    { icon: <DeleteIcon sx={{ color: red[500] }} />, name: 'Delete' },
-    { icon: <EditIcon color="action" />, name: 'Edit' },
-  ];
+  // Context
+  const { categories, fileteredCategory, getCategory } = useContext(CategoryContext);
+
+  // const icons = [
+  //   { icon: <DeleteIcon sx={{ color: red[500] }} />, name: 'Delete' },
+  //   { icon: <EditIcon color="action" />, name: 'Edit' },
+  // ];
 
   const modalToggle = () => {
     setIsModal(!isModal);
   };
 
-  const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
+  const handleYes = () => {
+    setYes(true);
   };
-
-  const handleCloseMenu = () => {
-    setOpen(null);
+  const handleNo = () => {
+    setYes(false);
   };
 
   const handleRequestSort = (event, property) => {
@@ -190,7 +194,7 @@ export default function UserPage() {
           <Button
             onClick={() => {
               modalToggle();
-              setCatData({ name: 'New Category' });
+              // setCatData({ name: 'New Category' });
               setNewCategory(true);
             }}
             variant="contained"
@@ -251,7 +255,7 @@ export default function UserPage() {
                             {/* <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
                               <Iconify icon={'eva:more-vertical-fill'} />
                             </IconButton> */}
-                            {icons.map((e, index) => (
+                            {/* {icons.map((e, index) => (
                               <Button
                                 key={index}
                                 onClick={() => {
@@ -262,7 +266,26 @@ export default function UserPage() {
                               >
                                 {e.icon}
                               </Button>
-                            ))}
+                            ))} */}
+                            <Button
+                              onClick={() => {
+                                handleYes();
+                                setCatData({ ...row });
+                              }}
+                            >
+                              <DeleteIcon sx={{ color: 'red' }} />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                modalToggle();
+                                setCatData({ ...row });
+                                setNewCategory(false);
+                                setIsSubmit(!isSubmit);
+                                setNewCategory(false);
+                              }}
+                            >
+                              <EditIcon sx={{ color: 'grey' }} />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
@@ -323,6 +346,21 @@ export default function UserPage() {
           newCategory={newCategory}
         />
       )}
+      <DeleteConfirm
+        open={yes}
+        handleClose={handleNo}
+        title="Category"
+        noFunc={() => {
+          handleNo();
+          console.log('No');
+        }}
+        yesFunc={() => {
+          console.log('Yes Delete');
+          deleteCat({ _id: catData._id });
+          handleNo();
+          setIsSubmit(!isSubmit);
+        }}
+      />
     </>
   );
 }
